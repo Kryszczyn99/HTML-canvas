@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Zadanie 2</title>
+    <style>
+    	* { padding: 0; margin: 0; }
+    	canvas { background: #eee; display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas" width="800" height="600"></canvas>
+    <script>
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        var tab = [];
+        var points = 0;
+        var enemiesTab = [];
+        var y = 579;
+        var x = 400;
+
+        
+
+        window.addEventListener('keydown',movement,false);
+
+        setInterval(() => {
+            create_rect();
+            generateTexxt();
+            tab.forEach((bullet) => {bullet.renderbullet();});
+            enemiesTab.forEach((enemy) => {enemy.renderenemy();});
+            collFunction();
+        }, 50);
+
+        setInterval(() => {spawnenemy();}, 1000);
+
+        function spawnenemy() {
+            if (randomizer(0, 10) > 5) {
+                enemiesTab.push(new enemy());
+            }
+        }
+        function generateTexxt() {
+            ctx.font = "56px arial";
+            ctx.fillText(points, 5, 40);
+        }
+
+        function collFunction() {
+            enemiesTab.forEach((enemy) => {
+                tab.forEach((bullet) => {
+                    if (collisionChecker(enemy, bullet)) {
+                        var index = enemiesTab.indexOf(enemy);
+                        enemiesTab.splice(index, 1);
+                        delete enemy;
+                        index = tab.indexOf(bullet);
+                        tab.splice(index, 1);
+                        delete bullet;
+                        points++;
+                    }
+                });
+            });
+        }
+        const collisionChecker = (enemy, bullet) =>
+            (enemy.getR() + bullet.getR()) ** 2 >
+            (enemy.getX() - bullet.getX()) ** 2 +
+                (enemy.getY() - bullet.getY()) ** 2;
+
+        function movement(e) {
+            if (e.keyCode == 37 && x > 0) {
+                x -= 20 //move left
+            } else if (e.keyCode == 39 && x < 780) {
+                x += 20 //move right
+            } else if (e.keyCode == 32) {
+                tab.push(new bullet(x+10,y+10,4)); // shooting
+            }
+        }  
+        function create_rect() {
+            ctx.clearRect(0, 0, 800, 600);
+            ctx.beginPath();
+            ctx.fillStyle = "black";
+            ctx.rect(x, y, 20, 20);
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        class bullet {
+            constructor(bulletX,bulletY,rad) {
+                this.bX = bulletX;
+                this.bY = bulletY;
+                this.r = rad;
+            }
+            getX(){ return this.bX;}
+            getY(){ return this.bY;}
+            getR(){ return this.r;}
+            renderbullet() {
+                ctx.beginPath();
+                this.bY -= 15;
+                ctx.fillStyle = "green";
+                ctx.arc(this.bX,this.bY,this.r,0,2*Math.PI);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        function randomizer(min, max) {
+                min = Math.ceil(min);
+                max = Math.floor(max);
+                return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+            }
+        class enemy {
+                constructor() {
+                    this.radius = 40;
+                    this.enemyX = randomizer(0, 760);
+                    this.enemyY = -25;
+                }
+
+                getR() {return this.radius;}
+                getY() {return this.enemyY;}
+                getX() {return this.enemyX;}
+                moveenemy() {this.enemyY += 4;}
+
+                renderenemy() {
+                    ctx.beginPath();
+                    this.moveenemy();
+                    ctx.fillStyle = "blue";
+                    ctx.arc(this.enemyX,this.enemyY,this.radius,0,2 * Math.PI);
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            }
+    </script>
+</body>
+</html>
+
+

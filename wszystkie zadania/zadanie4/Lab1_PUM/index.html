@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Zadanie 2</title>
+    <style>
+    	* { padding: 0; margin: 0; }
+    	canvas { background: gray; display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas" width="800" height="600"></canvas>
+    <script>
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        
+        var whiteLinesTab = [];
+        var whiteMiddleLinesTab = [];
+        var obstacles = [];
+        
+        var y = 400;
+        var x = 200;
+
+
+
+        window.addEventListener('keydown',movement,false);
+
+        setInterval(() => {
+            
+            create_red_lines();
+            
+            whiteLinesTab.forEach((line) => {line.renderline();});
+            whiteMiddleLinesTab.forEach((line_middle) => {line_middle.renderline();});
+            obstacles.forEach((obstacle) => {obstacle.renderobstacle();});
+            
+            create_wheel_left();
+            create_wheel_right();
+            create_rect();
+            
+            defeatChecker();
+        }, 50);
+        setInterval(() => {spawnline();}, 200);
+        setInterval(() => {spawnobstacle();}, 2000);
+
+        function create_red_lines() {
+            ctx.clearRect(0, 0, 800, 600);
+            ctx.beginPath();
+            ctx.fillStyle = "red";
+            ctx.rect(0,0,40,600);
+            ctx.rect(760,0,40,600);
+            ctx.fill();
+            ctx.closePath();
+        }
+        function create_wheel_left() {
+            ctx.beginPath();
+            ctx.fillStyle = "black";
+            ctx.arc(x+10,y+40,25,0,2*Math.PI);
+            ctx.arc(x+10,y+150,25,0,2*Math.PI);
+            ctx.fill();
+            ctx.closePath();
+        }
+        function create_wheel_right() {
+            
+            ctx.beginPath();
+            ctx.fillStyle = "black";
+            ctx.arc(x+90,y+40,25,0,2*Math.PI);
+            ctx.arc(x+90,y+150,25,0,2*Math.PI);
+            ctx.fill();
+            ctx.closePath();
+        }
+        function create_rect() {
+            ctx.beginPath();
+            ctx.fillStyle = "green";
+            ctx.rect(x, y, 100, 200);
+            ctx.fill();
+            ctx.closePath();
+        }
+        function spawnline() {
+            whiteLinesTab.push(new line(0,-50));
+            whiteLinesTab.push(new line(760,-50));
+            whiteMiddleLinesTab.push(new line_middle(390,-70));
+        }
+        function spawnobstacle() {
+            obstacles.push(new obstacle(randomizer(120,660),-50))
+        }
+        function defeatChecker() {
+            obstacles.forEach((obstacle) => {
+                if (colliding(obstacle)) {
+                    
+                    var index = obstacles.indexOf(obstacle);
+                        obstacles.splice(index, 1);
+                        delete obstacle;
+                    ctx.clearRect(0, 0, 800, 600);
+                    alert("Przegrałeś, wciśnij F5 lub OK!");
+                }
+            });
+        }
+        const colliding = (obstacle) => {
+            return (
+                x < obstacle.getX() + 120 && x + 100 > obstacle.getX() &&
+                y < obstacle.getY() + 30 &&200 + y > obstacle.getY()
+            );
+        };
+        function movement(e) {
+            if (e.keyCode == 37 && x > 80) {
+                x -= 30 //move left
+            } else if (e.keyCode == 39 && x < 620) {
+                x += 30 //move right
+            }
+        }  
+        class line{
+            constructor(line_x,line_y) {
+                this.lX = line_x;
+                this.lY = line_y;
+            }
+            getX(){ return this.lX;}
+            getY(){ return this.lY;}
+            
+            moveline() {this.lY += 30;}
+            renderline() {
+                ctx.beginPath();
+                this.moveline();
+                ctx.fillStyle = "white";
+                ctx.rect(this.lX,this.lY,40,60);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+        function randomizer(min, max) {
+                min = Math.ceil(min);
+                max = Math.floor(max);
+                return Math.floor(Math.random() * (max - min) + min);
+        }
+        class line_middle{
+            constructor(line_x,line_y) {
+                this.lX = line_x;
+                this.lY = line_y;
+            }
+            getX(){ return this.lX;}
+            getY(){ return this.lY;}
+            moveline() {this.lY += 30;}
+            renderline() {
+                ctx.beginPath();
+                this.moveline();
+                ctx.fillStyle = "white";
+                ctx.rect(this.lX,this.lY,20,80);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+        class obstacle{
+            constructor(line_x,line_y) {
+                this.lX = line_x;
+                this.lY = line_y;
+            }
+            getX(){ return this.lX;}
+            getY(){ return this.lY;}
+            moveobstacle() {this.lY += 30;}
+            renderobstacle() {
+                ctx.beginPath();
+                this.moveobstacle();
+                ctx.fillStyle = "blue";
+                ctx.rect(this.lX,this.lY,120,30);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+    </script>
+</body>
+</html>
+
+

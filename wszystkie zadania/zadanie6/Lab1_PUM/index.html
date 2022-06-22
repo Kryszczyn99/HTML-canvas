@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Zadanie 2</title>
+    <style>
+    	* { padding: 0; margin: 0; }
+    	canvas { background: gray; display: block; margin: 100px auto; }
+        .animate {
+            animation: rotate 15s alternate infinite;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotateZ(0deg);
+            }
+            33% {
+                transform: rotateZ(10deg);
+            }
+            66% {
+                transform: rotateZ(0deg);
+            }
+            100% {
+                transform: rotateZ(-10deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas" class="animate" width="800" height="600"></canvas>
+    <script>
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        var car=new Image();
+        car.onload=start;
+        car.src='car.png';
+        ctx.drawImage(car,0,0);
+        var flag = "";
+        var movingTimeout = -1;
+
+        var bulletsTable = [];
+        var whiteLinesTab = [];
+        var whiteMiddleLinesTab = [];
+        var obstacles = [];
+        var bonuses = [];
+        var points = 0;
+        var enemies = 0;
+        var y = 400;
+        var x = 200;
+        var current_game_speed = 2;
+        var basic_speed_for_objects = 20;
+        var basic_speed_for_white_line = 30;
+        var basic_spawn_line = 300;
+
+        var speed_for_white_lines = basic_speed_for_white_line;
+        var speed_for_bonus_and_obstacle = basic_speed_for_objects;
+        var speed_for_spawning_lines = basic_spawn_line;
+        setInterval(() => {
+            
+            create_red_lines();
+            
+            whiteLinesTab.forEach((line) => {line.renderline();});
+            whiteMiddleLinesTab.forEach((line_middle) => {line_middle.renderline();});
+            bonuses.forEach((bonus) => {bonus.renderbonus();});
+            obstacles.forEach((obstacle) => {obstacle.renderobstacle();});
+            
+            bulletsTable.forEach((bullet) => {bullet.renderbullet();});
+            create_wheel_left();
+            create_wheel_right();
+            create_rect();
+            generateText();
+            bulletColliding();
+            bonusesChecker();
+            defeatChecker();
+        }, 50);
+        setInterval(() => {spawnline();}, speed_for_spawning_lines);
+        setInterval(() => {spawnobstacle();}, 2000);
+
+        setInterval(() => {spawnbonus();}, 3500);
+
+
+        function generateText() {
+            ctx.font = "44px arial";
+            ctx.fillText("Bonus: " + points, 5, 40);
+            ctx.fillText("Killed: " + enemies,5,80);
+            ctx.fillText("Speed: "+ current_game_speed,5,120);
+        }
+        function create_red_lines() {
+            ctx.clearRect(0, 0, 800, 600);
+            ctx.beginPath();
+            ctx.fillStyle = "red";
+            ctx.rect(0,0,40,600);
+            ctx.rect(760,0,40,600);
+            ctx.fill();
+            ctx.closePath();
+        }
+        function create_wheel_left() {
+            ctx.beginPath();
+            ctx.fillStyle = "black";
+            ctx.arc(x+10,y+40,25,0,2*Math.PI);
+            ctx.arc(x+10,y+150,25,0,2*Math.PI);
+            ctx.fill();
+            ctx.closePath();
+        }
+        function create_wheel_right() {
+            
+            ctx.beginPath();
+            ctx.fillStyle = "black";
+            ctx.arc(x+90,y+40,25,0,2*Math.PI);
+            ctx.arc(x+90,y+150,25,0,2*Math.PI);
+            ctx.fill();
+            ctx.closePath();
+        }
+        function create_rect() {
+            ctx.beginPath();
+            ctx.fillStyle = "green";
+            ctx.rect(x, y, 100, 200);
+            ctx.fill();
+            ctx.closePath();
+        }
+        function spawnline() {
+            whiteLinesTab.push(new line(0,-50));
+            whiteLinesTab.push(new line(760,-50));
+            whiteMiddleLinesTab.push(new line_middle(390,-70));
+        }
+        function spawnobstacle() {
+            obstacles.push(new obstacle(randomizer(120,660),-50));
+
+            
+        }
+        function spawnbonus() {
+            bonuses.push(new bonus(randomizer(120,660),-50));
+        }
+        function bulletColliding() {
+            bulletsTable.forEach((shoot) => {
+                obstacles.forEach((obstacle) => {
+                    if(bulletCollider(shoot,obstacle)) {
+                        var index = obstacles.indexOf(index);
+                        obstacles.splice(index,1);
+                        delete obstacle;
+                        enemies++;
+                    }
+                });
+            });
+        }
+        const bulletCollider = (shoot,obstacle) => {
+            return (
+                shoot.getX() < obstacle.getX() + 120 && shoot.getX() + 20 > obstacle.getX() &&
+                shoot.getY() < obstacle.getY() + 30 && 20 + shoot.getY() > obstacle.getY()
+            );
+        };
+        function bonusesChecker() {
+            bonuses.forEach((bonus) =>{
+                if (collidingBonus(bonus)) {
+                    var index = bonuses.indexOf(bonus);
+                    bonuses.splice(index,1);
+                    delete bonus;
+                    points++;
+                } 
+            });
+        }
+        
+        const collidingBonus = (bonus) => {
+            return (
+                x < bonus.getX() + 120 && x + 100 > bonus.getX() &&
+                y < bonus.getY() + 30 && 200 + y > bonus.getY()
+            );
+        };
+        function defeatChecker() {
+            obstacles.forEach((obstacle) => {
+                if (colliding(obstacle)) {
+                    
+                    var index = obstacles.indexOf(obstacle);
+                        obstacles.splice(index, 1);
+                        delete obstacle;
+                    ctx.clearRect(0, 0, 800, 600);
+                    alert("Przegrałeś, wciśnij F5 lub OK!");
+                }
+            });
+        }
+        const colliding = (obstacle) => {
+            return (
+                x < obstacle.getX() + 120 && x + 100 > obstacle.getX() &&
+                y < obstacle.getY() + 30 &&200 + y > obstacle.getY()
+            );
+        };
+        document.onkeydown=(e) => {
+            e = e||window.event;
+            if (e.keyCode == 37) {
+                flag = "left";
+                startMoving(flag);
+            }
+            else if(e.keyCode == 39) {
+                flag = "right";
+                startMoving(flag);
+            }
+            else if (e.keyCode == 32) {
+                bulletsTable.push(new bullet(x+42,y+42,7)); // shooting
+            } 
+            else if(e.keyCode==65) {
+                gameSpeed(1);
+            }
+            else if(e.keyCode==90) {
+                gameSpeed(-1);
+            }
+            
+            else if(e.keyCode==38) {
+                flag = "up";
+                startMoving(flag);
+            }
+            else if(e.keyCode==40) {
+                flag = "down";
+                startMoving(flag);
+            }
+            
+        }
+        function gameSpeed(direction) {
+            if(current_game_speed<3 && direction==1) {
+                console.log("lecimy w gore");
+                current_game_speed++;
+            }
+            else if(current_game_speed>1 && direction==-1) {
+                console.log("lecimy w dol");
+                current_game_speed--;
+            }
+            if(current_game_speed==2) {
+                speed_for_white_lines = basic_speed_for_white_line;
+                speed_for_bonus_and_obstacle = basic_speed_for_objects;
+                speed_for_spawning_lines = basic_spawn_line;
+            }
+            else if(current_game_speed==1) {
+                speed_for_white_lines = basic_speed_for_white_line - 10;
+                speed_for_bonus_and_obstacle = basic_speed_for_objects - 5;
+            }
+            
+            else if(current_game_speed==3) {
+                speed_for_white_lines = basic_speed_for_white_line + 10;
+                speed_for_bonus_and_obstacle = basic_speed_for_objects + 5;
+            }
+        }
+        document.onkeyup=(e) => {
+            e = e||window.event;
+            if (e.keyCode == 37) {
+                flag = "";
+                stopMoving();
+            }
+            else if(e.keyCode == 39) {
+                flag = "";
+                stopMoving();
+            }
+            else if(e.keyCode == 40) {
+                flag = "";
+                stopMoving();
+            }
+            else if(e.keyCode == 38) {
+                flag = "";
+                stopMoving();
+            }
+        }
+        function startMoving(flag) {
+            if(movingTimeout === -1) loop(flag);
+            
+        }
+        function stopMoving() {
+            clearTimeout(movingTimeout);
+            movingTimeout = -1;
+        }
+        function loop(flag) {
+            move(flag);
+            movingTimeout=setTimeout(loop,10,flag);
+
+        }
+        function move(flag) {
+            if(flag=="left"  && x > 80) {
+                x -= 10;
+            }
+            else if(flag=="right" && x < 620) {
+                x += 10;
+            }
+            else if(flag=="up" && y>0) {
+                y -=10
+            }
+            else if(flag=="down" && y<400) {
+                y +=10;
+            }
+            console.log(y);
+        }
+    
+        class line{
+            constructor(line_x,line_y) {
+                this.lX = line_x;
+                this.lY = line_y;
+            }
+            getX(){ return this.lX;}
+            getY(){ return this.lY;}
+            
+            moveline() {this.lY += speed_for_white_lines;}
+            renderline() {
+                ctx.beginPath();
+                this.moveline();
+                ctx.fillStyle = "white";
+                ctx.rect(this.lX,this.lY,40,100);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+        function randomizer(min, max) {
+                min = Math.ceil(min);
+                max = Math.floor(max);
+                return Math.floor(Math.random() * (max - min) + min);
+        }
+        class line_middle{
+            constructor(line_x,line_y) {
+                this.lX = line_x;
+                this.lY = line_y;
+            }
+            getX(){ return this.lX;}
+            getY(){ return this.lY;}
+            moveline() {this.lY += speed_for_white_lines;}
+            renderline() {
+                ctx.beginPath();
+                this.moveline();
+                ctx.fillStyle = "white";
+                ctx.rect(this.lX,this.lY,20,80);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+        class obstacle{
+            constructor(line_x,line_y) {
+                this.lX = line_x;
+                this.lY = line_y;
+            }
+            getX(){ return this.lX;}
+            getY(){ return this.lY;}
+            moveobstacle() {this.lY += speed_for_bonus_and_obstacle;}
+            renderobstacle() {
+                ctx.beginPath();
+                this.moveobstacle();
+                ctx.fillStyle = "black";
+                ctx.rect(this.lX,this.lY,120,30);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+        class bullet {
+            constructor(bulletX,bulletY,rad) {
+                this.bX = bulletX;
+                this.bY = bulletY;
+                this.r = rad;
+            }
+            getX(){ return this.bX;}
+            getY(){ return this.bY;}
+            getR(){ return this.r;}
+            renderbullet() {
+                ctx.beginPath();
+                this.bY -= 15;
+                ctx.fillStyle = "yellow";
+                ctx.rect(this.bX,this.bY,20,20);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+        class bonus {
+            constructor(line_x,line_y) {
+                this.lX = line_x;
+                this.lY = line_y;
+            }
+            getX(){ return this.lX;}
+            getY(){ return this.lY;}
+            movebonus() {this.lY += speed_for_bonus_and_obstacle;}
+            renderbonus() {
+                ctx.beginPath();
+                this.movebonus();
+                ctx.fillStyle = "blue";
+                ctx.rect(this.lX,this.lY,60,60);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Zadanie 2</title>
+    <style>
+    	* { padding: 0; margin: 0; }
+    	canvas { background: gray; display: block; margin: 100px auto; }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas" class="animate" width="800" height="600"></canvas>
+    <script>
+
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        var car_x = 60;
+        var car_y = 500;
+        var black_x = 0;
+        var black_y = 560;
+        var whiteTable = [];
+        var redTable = [];
+        var points=0;
+        var obstacles = [];
+        var jumpForce = car_y - 300;
+        var fall = false;
+        var jumping = null;
+
+        document.onkeyup = (val) => {
+            val = val || window.event;
+
+            if (val.keyCode == 32) {
+                if (!jumping) {
+                    jumping = setInterval(() => {
+                        if (car_y > jumpForce && !fall) { car_y -= 5;} 
+                        else {
+                            fall = true;
+                            car_y += 5;
+                            if (car_y === 500) {
+                                clearInterval(jumping);
+                                jumping = null;
+                                fall = false;
+                            }
+                        }
+                    }, 10);
+                }
+            }
+        };
+
+        setInterval(() => {
+            
+            create_rect();
+            create_black();
+            create_wheel();
+            whiteTable.forEach((line) => {line.renderline();});
+            redTable.forEach((line) => {line.renderline();});
+            obstacles.forEach((obstacle) => {obstacle.renderobstacle();});
+            points+=1;
+            generateText();
+            
+            defeatChecker();
+        }, 50);
+
+        setInterval(() => {spawnline();}, 400);
+        setInterval(() => {spawnobstacle();}, 2000);
+
+        function create_rect() {
+            
+            ctx.clearRect(0, 0, 800, 600);
+            ctx.beginPath();
+            ctx.fillStyle = "green";
+            ctx.rect(car_x, car_y, 100, 50);
+            ctx.rect(car_x+25,car_y-30,50,30)
+            ctx.stroke();
+            ctx.fill();
+            ctx.closePath();
+        }
+        function create_wheel() {
+            ctx.beginPath();
+            ctx.fillStyle = "black";
+            ctx.arc(car_x+15,car_y+42,17,0,2*Math.PI);
+            ctx.arc(car_x+85,car_y+42,17,0,2*Math.PI);
+            ctx.fill();
+            ctx.closePath();
+        }
+        function create_black() {
+            ctx.beginPath();
+            ctx.fillStyle = "black";
+            ctx.rect(black_x, black_y, 940, 40);
+            black_x-=10;
+            ctx.fill();
+            ctx.closePath();
+        }
+        function spawnline() {
+            redTable.push(new line_red(850,560));
+            whiteTable.push(new line_white(900,560));
+        }
+        function spawnobstacle() {
+            obstacles.push(new obstacle(810,510));
+            
+        }
+        function generateText() {
+            ctx.font = "44px arial";
+            ctx.fillStyle = "black";
+            ctx.fillText("Points: " + points, 5, 40);
+        }
+        function defeatChecker() {
+            obstacles.forEach((obstacle) => {
+                if (colliding(obstacle)) {
+                    
+                    var index = obstacles.indexOf(obstacle);
+                    obstacles.length=0;
+                    ctx.clearRect(0, 0, 800, 600);
+                    alert("Przegrałeś, wciśnij F5 lub OK!");
+                }
+            });
+        }
+        
+
+        const colliding = (obstacle) => {
+            return (
+                car_x < obstacle.getX() + 50 && car_x + 100 > obstacle.getX() &&
+                car_y < obstacle.getY() + 50 && 50 + car_y > obstacle.getY()
+            );
+        };
+        class obstacle{
+            constructor(line_x,line_y) {
+                this.lX = line_x;
+                this.lY = line_y;
+            }
+            getX(){ return this.lX;}
+            getY(){ return this.lY;}
+            moveobstacle() {this.lX -= 10 ;}
+            renderobstacle() {
+                ctx.beginPath();
+                this.moveobstacle();
+                ctx.fillStyle = "blue";
+                ctx.rect(this.lX,this.lY,50,50);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+        class line_white{
+            constructor(line_x,line_y) {
+                this.lX = line_x;
+                this.lY = line_y;
+            }
+            getX(){ return this.lX;}
+            getY(){ return this.lY;}
+            
+            moveline() {this.lX -= 10;}
+            renderline() {
+                ctx.beginPath();
+                this.moveline();
+                ctx.fillStyle = "white";
+                ctx.rect(this.lX,this.lY,50,40);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+        class line_red{
+            constructor(line_x,line_y) {
+                this.lX = line_x;
+                this.lY = line_y;
+            }
+            getX(){ return this.lX;}
+            getY(){ return this.lY;}
+            
+            moveline() {this.lX -= 10;}
+            renderline() {
+                ctx.beginPath();
+                this.moveline();
+                ctx.fillStyle = "red";
+                ctx.rect(this.lX,this.lY,50,40);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+    </script>
+</body>
+</html>
+
+

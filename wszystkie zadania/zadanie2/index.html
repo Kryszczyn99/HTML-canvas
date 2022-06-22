@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Zadanie 2</title>
+    <style>
+    	* { padding: 0; margin: 0; }
+    	canvas { background: #eee; display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas" width="800" height="600"></canvas>
+
+    <script>
+        var x = 20;
+        var y = 100;
+        var arc_x = 142;
+        var arc_y = 50;
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        async function sleep(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+        async function create_rectangle(a,b,c,d) {
+            
+            ctx.fill();
+            ctx.beginPath();
+            //ctx.fillStyle = circleColor;
+            ctx.rect(a,b,c,d)
+            ctx.fill();
+            ctx.closePath();
+            x+=100;
+            y+=100;
+        }
+        async function create_stairs(){
+            create_rectangle(x,y,100,500);
+            await sleep(1000);
+            create_rectangle(x,y,100,400);
+            await sleep(1000);
+            create_rectangle(x,y,100,300);
+            await sleep(1000);
+            create_rectangle(x,y,100,200);
+            await sleep(1000);
+            create_rectangle(x,y,100,100);
+            await falling(arc_x,arc_y);
+        }
+        function create_arc(x,y){
+            ctx.beginPath();
+            ctx.fillStyle = 'black';
+            ctx.arc(x, y, 50, 0, 2 * Math.PI, false);
+            ctx.fill();
+            ctx.closePath();
+        }
+        function delete_arc(x,y){
+            ctx.beginPath();
+            ctx.fillStyle = '#eee';
+            ctx.arc(x, y, 51, 0, 2 * Math.PI, false);
+            ctx.fill();
+            ctx.closePath();
+        }
+        async function falling(x,y){
+            create_arc(arc_x,arc_y);
+            setInterval(()=>{
+                delete_arc(x,y);
+                if(x<639){
+                    x+=2;
+                    y+=2;
+                }
+                create_arc(x,y);
+            },10);
+            
+        }
+        create_stairs();
+
+        
+        
+        
+    </script>
+</body>
+</html>

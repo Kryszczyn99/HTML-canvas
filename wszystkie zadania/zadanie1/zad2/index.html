@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Zadanie 1</title>
+    <style>
+    	* { padding: 0; margin: 0; }
+    	canvas { background: #eee; display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+<canvas id="myCanvas" width="800" height="600"></canvas>
+
+<script>
+    var canvas = document.getElementById("myCanvas");
+    var ctx = canvas.getContext("2d");
+    var blue1 = 255, blue2 = 0;
+    var green1 = 0, green2 = 255;
+    var flag = false;
+    setInterval(animation,20);
+    
+    function animation() {
+        if (!flag) {
+            blue1 -= 1;
+            blue2 += 1;
+            green1 += 1;
+            green2 -= 1;
+        } 
+        else{
+            blue1 += 1;
+            blue2 -= 1;
+            green1 -= 1;
+            green2 += 1;
+        }
+        if (blue1 < 1 || green1 > 254) {
+            flag = true;
+        }
+        if (blue1 > 254 || green1 < 1) {
+            flag = false;
+        }
+        ctx.beginPath();
+        var gradient = ctx.createLinearGradient(0,0,50,50);
+        gradient.addColorStop(0, `rgb(0,${green1},${blue1})`);
+        gradient.addColorStop(1, `rgb(0,${green2},${blue2})`);
+        ctx.fillStyle = gradient;
+        ctx.arc(240, 160, 50, 0, 2 * Math.PI, false);
+        ctx.fill();
+    }
+</script>
+
+</body>
+</html>
+
